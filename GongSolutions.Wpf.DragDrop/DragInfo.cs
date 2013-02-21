@@ -96,6 +96,13 @@ namespace GongSolutions.Wpf.DragDrop
         /// <summary>
         /// Initializes a new instance of the DragInfo class.
         /// </summary>
+        public DragInfo()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the DragInfo class.
+        /// </summary>
         /// 
         /// <param name="sender">
         /// The sender of the mouse event that initiated the drag.
@@ -169,7 +176,7 @@ namespace GongSolutions.Wpf.DragDrop
         /// This must be set to a value other than <see cref="DragDropEffects.None"/> by a drag handler in order 
         /// for a drag to start.
         /// </remarks>
-        public DragDropEffects Effects { get; set; }
+        public virtual DragDropEffects Effects { get; set; }
 
         /// <summary>
         /// Gets the mouse button that initiated the drag.
