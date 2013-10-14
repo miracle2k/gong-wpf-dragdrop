@@ -10,73 +10,66 @@ using System.Windows;
 
 namespace NorthwindExample.ViewModels
 {
-    class EmployeesTabViewModel : ViewModel<ICollection<EmployeeViewModel>>, IDropTarget
+  internal class EmployeesTabViewModel : ViewModel<ICollection<EmployeeViewModel>>, IDropTarget
+  {
+    public EmployeesTabViewModel(IList<EmployeeViewModel> dataModel)
+      : base(dataModel)
     {
-        public EmployeesTabViewModel(IList<EmployeeViewModel> dataModel)
-            : base(dataModel)
-        {
-            Employees = new ListCollectionView((IList)dataModel);
-            Employees.CurrentChanged += (s, e) => SubOrdinates.Refresh();
+      this.Employees = new ListCollectionView((IList)dataModel);
+      this.Employees.CurrentChanged += (s, e) => this.SubOrdinates.Refresh();
 
-            SubOrdinates = new ListCollectionView((IList)dataModel);
-            SubOrdinates.Filter = FilterSubOrdinate;
-        }
-
-        void IDropTarget.DragOver(IDropInfo dropInfo)
-        {
-            EmployeeViewModel targetEmployee = dropInfo.TargetItem as EmployeeViewModel;
-            IEnumerable<EmployeeViewModel> employees = GetEmployees(dropInfo.Data);
-
-            if (targetEmployee != null && !employees.Contains(targetEmployee))
-            {
-                dropInfo.DropTargetAdorner = DropTargetAdorners.Highlight;
-                dropInfo.Effects = DragDropEffects.Copy;
-            }
-        }
-
-        void IDropTarget.Drop(IDropInfo dropInfo)
-        {
-            EmployeeViewModel targetEmployee = (EmployeeViewModel)dropInfo.TargetItem;
-            IEnumerable<EmployeeViewModel> employees = GetEmployees(dropInfo.Data);
-
-            foreach (EmployeeViewModel employee in employees)
-            {
-                employee.DataModel.ReportsTo = targetEmployee.DataModel.EmployeeID;
-            }
-
-            SubOrdinates.Refresh();
-        }
-
-        public ICollectionView Employees { get; private set; }
-        public ICollectionView SubOrdinates { get; private set; }
-
-        bool FilterSubOrdinate(object o)
-        {
-            EmployeeViewModel selectedEmployee = (EmployeeViewModel)Employees.CurrentItem;
-            EmployeeViewModel employee = (EmployeeViewModel)o;
-
-            if (selectedEmployee != null)
-            {
-                return employee.DataModel.ReportsTo == selectedEmployee.DataModel.EmployeeID;
-            }
-
-            return true;
-        }
-
-        IEnumerable<EmployeeViewModel> GetEmployees(object data)
-        {
-            if (data is EmployeeViewModel)
-            {
-                return new[] { (EmployeeViewModel)data };
-            }
-            else if (data is IEnumerable<EmployeeViewModel>)
-            {
-                return (IEnumerable<EmployeeViewModel>)data;
-            }
-            else
-            {
-                return Enumerable.Empty<EmployeeViewModel>();
-            }
-        }
+      this.SubOrdinates = new ListCollectionView((IList)dataModel);
+      this.SubOrdinates.Filter = this.FilterSubOrdinate;
     }
+
+    void IDropTarget.DragOver(IDropInfo dropInfo)
+    {
+      var targetEmployee = dropInfo.TargetItem as EmployeeViewModel;
+      var employees = this.GetEmployees(dropInfo.Data);
+
+      if (targetEmployee != null && !employees.Contains(targetEmployee)) {
+        dropInfo.DestinationText = targetEmployee.FullName;
+        dropInfo.DropTargetAdorner = DropTargetAdorners.Highlight;
+        dropInfo.Effects = DragDropEffects.Copy;
+      }
+    }
+
+    void IDropTarget.Drop(IDropInfo dropInfo)
+    {
+      var targetEmployee = (EmployeeViewModel)dropInfo.TargetItem;
+      var employees = this.GetEmployees(dropInfo.Data);
+
+      foreach (var employee in employees) {
+        employee.DataModel.ReportsTo = targetEmployee.DataModel.EmployeeID;
+      }
+
+      this.SubOrdinates.Refresh();
+    }
+
+    public ICollectionView Employees { get; private set; }
+    public ICollectionView SubOrdinates { get; private set; }
+
+    private bool FilterSubOrdinate(object o)
+    {
+      var selectedEmployee = (EmployeeViewModel)this.Employees.CurrentItem;
+      var employee = (EmployeeViewModel)o;
+
+      if (selectedEmployee != null) {
+        return employee.DataModel.ReportsTo == selectedEmployee.DataModel.EmployeeID;
+      }
+
+      return true;
+    }
+
+    private IEnumerable<EmployeeViewModel> GetEmployees(object data)
+    {
+      if (data is EmployeeViewModel) {
+        return new[] { (EmployeeViewModel)data };
+      } else if (data is IEnumerable<EmployeeViewModel>) {
+        return (IEnumerable<EmployeeViewModel>)data;
+      } else {
+        return Enumerable.Empty<EmployeeViewModel>();
+      }
+    }
+  }
 }
